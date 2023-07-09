@@ -154,7 +154,7 @@ bool lvgl_spi_driver_init(int host,
     int dma_channel,
     int quadwp_pin, int quadhd_pin)
 {
-    assert((0 <= host) && (SPI_HOST_MAX > host));
+    assert((0 <= host) && (host < 3));// wch remove SPI_HOST_MAX commit d44b7e808abcf102bf5fc78f79abf7399f0d69ce
     const char *spi_names[] = {
         "SPI1_HOST", "SPI2_HOST", "SPI3_HOST"
     };
