@@ -13,6 +13,7 @@
 #include "tp_spi.h"
 #include <stddef.h>
 
+#include "../../main/display.h"
 #include "../../main/calibrateTouch.h"
 
 /*********************
@@ -96,7 +97,7 @@ bool xpt2046_read(lv_indev_drv_t *drv, lv_indev_data_t *data)
     wch the normalized coords x,y are between XPT2046_X_MAX,XPT2046_X_MIN and ...Y...
     XPT2046_X_MIN...XPT2046_Y_MAX *were* #defined CONFIG_LV_TOUCH_X_MIN etc
     but need to be in variables for dynamic calibration.
-    Then the notmalized x,y also need to be in static for code above to see.
+    Then the normalized x,y also need to be in static for code above to see.
     */
     assert(drv->user_data == NULL || drv->user_data == &calibratetouch); // nobody else can use userdata
     drv->user_data = &calibratetouch;
@@ -113,19 +114,19 @@ bool xpt2046_read(lv_indev_drv_t *drv, lv_indev_data_t *data)
 
         x = xpt2046_cmd(CMD_X_READ);
         y = xpt2046_cmd(CMD_Y_READ);
-        ESP_LOGI(TAG, "P(%d,%d)", x, y);
+    //    ESP_LOGI(TAG, "P(%d,%d)", x, y);
 
         /*Normalize Data back to 12-bits*/
         x = x >> 4;
         y = y >> 4;
-        ESP_LOGI(TAG, "P_norm(%d,%d)", x, y);
+    //    ESP_LOGI(TAG, "P_norm(%d,%d)", x, y);
 
         xpt2046_corr(&x, &y);
         xpt2046_avg(&x, &y);
         last_x = x;
         last_y = y;
 
-        ESP_LOGI(TAG, "x = %d, y = %d", x, y);
+    //    ESP_LOGI(TAG, "x = %d, y = %d", x, y);
     }
     else
     {
@@ -191,21 +192,21 @@ static void xpt2046_corr(int16_t *x, int16_t *y)
     calibratetouch.lastNormX = *x;
     calibratetouch.lastNormY = *y;
 
-    if ((*x) > XPT2046_X_MIN)
-        (*x) -= XPT2046_X_MIN;
+    if ((*x) > calibratetouch.X_MIN)
+        (*x) -= calibratetouch.X_MIN;
     else
         (*x) = 0;
 
-    if ((*y) > XPT2046_Y_MIN)
-        (*y) -= XPT2046_Y_MIN;
+    if ((*y) > calibratetouch.Y_MIN)
+        (*y) -= calibratetouch.Y_MIN;
     else
         (*y) = 0;
 
     (*x) = (uint32_t)((uint32_t)(*x) * LV_HOR_RES) /
-           (XPT2046_X_MAX - XPT2046_X_MIN);
+           (calibratetouch.X_MAX - calibratetouch.X_MIN);
 
     (*y) = (uint32_t)((uint32_t)(*y) * LV_VER_RES) /
-           (XPT2046_Y_MAX - XPT2046_Y_MIN);
+           (calibratetouch.Y_MAX - calibratetouch.Y_MIN);
 
 #if XPT2046_X_INV != 0
     (*x) = LV_HOR_RES - (*x);
